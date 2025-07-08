@@ -1,0 +1,17 @@
+# Cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Build do PyPI
+build/
+dist/
+*.egg-info/
+
+# VS Code e PyCharm
+.vscode/
+.idea/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
