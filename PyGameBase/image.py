@@ -68,7 +68,7 @@ class Imagemsplite:
                 "pl":L_img * len(largurat) + (len(largurat) - 1),
                 "pa":A_img,
                 "pd":L_img,
-                "lcl":os.path.join(self.pasta_saida, f"{cv}.png"),
+                "lcl": os.path.join(os.path.basename(self.pasta_saida), f"{cv}.png").replace("\\", "/"),
                 "flames":len(largurat)
             }}
             caminhos_completos = [os.path.join(self.folder, v) for v in vl]
@@ -79,3 +79,5 @@ class Imagemsplite:
             json.dump(dicionario,arq,indent=4)
         return self.pasta_saida
 
+decodificação = Imagemsplite("animation")
+decodificação.copilacao()

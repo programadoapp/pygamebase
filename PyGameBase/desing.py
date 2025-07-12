@@ -287,7 +287,22 @@ class AnimationImage:
             self.current_frame = (self.current_frame + 1) % self.frame_count
         return self.frames[self.current_frame]
 
-
+class function_lists_keyboard_press:
+    def __init__(self,keys:list,functions_def:list):
+        self.keys = keys
+        self.defs = functions_def
+    def active(self):
+        for k, func in zip(self.keys,self.defs):
+            if pygame.key.get_pressed()[k]:
+                func()
+class function_lists_keyboard_click:
+    def __init__(self,keys_click: list, functions_def: list):
+        self.keys = keys_click
+        self.defs = functions_def
+    def active(self,event:pygame):
+        for k, func in zip(self.keys,self.defs):
+            if event.key == k :
+                func()
 class Characters(AnimationImage):
     def __init__(self,jump=True,Collection:Collection=None,width=200,height=200,position_x=0,position_y=0,colision=False,directory=None,animation_name=None,height_image=None,width_image=None,padding_image=50,colision_color=True):
         self.width = width
@@ -379,8 +394,9 @@ class Characters(AnimationImage):
             if evento.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN]:
                 self.animation.stop()
                 self.animation.load(self.directory,animation_name, width=self.width_image, height=self.height_image)
-
-    def button_functions_on_press(self, disable: Desable = None, potencia=[1, 1, 1, 1],animation_UP=None,animation_left=None,animation_right=None,animation_down=None):
+    def update_image(self):
+        self.animation.load(self.directory, self.name_animation, width=self.width_image, height=self.height_image)
+    def button_functions_on_press(self, disable: Desable = None, potencia=[1, 1, 1, 1],animation_UP=None,animation_left=None,animation_right=None,animation_down=None,key_control:function_lists_keyboard_press=None):
         teclas = pygame.key.get_pressed()
         self.pular = False
 
@@ -388,7 +404,8 @@ class Characters(AnimationImage):
             return
         if disable is None:
             disable = Desable(False, False, False, False)
-            
+        if key_control:
+           key_control.active()
         if teclas[pygame.K_UP] and not disable.UP and self.button_desabilide[0] == False:
             if animation_UP is not None:
                    self.animation.load(self.directory,animation_UP,width=self.width_image,height=self.height_image)
@@ -406,11 +423,12 @@ class Characters(AnimationImage):
             if animation_right is not None:
                self.animation.load(self.directory,animation_right,width=self.width_image,height=self.height_image)
             self.position_x += potencia[3]
-    def button_functions_on_clicked(self, evento, disable: Desable = None, potencia=[1, 1, 1, 1], strength=(1, 1, 10, 1),solid_detector=False):
+    def button_functions_on_clicked(self, evento, disable: Desable = None, potencia=[1, 1, 1, 1], strength=(1, 1, 10, 1),key_control:function_lists_keyboard_click=None):
         self.pular = False
         if disable is None:
             disable = Desable(False, False, False, False)
-        
+        if key_control:
+            key_control.active(evento)
         if evento.type == pygame.KEYDOWN:
             if evento.key == pygame.K_LEFT and not disable.LEFT:
                 for i in range(strength[2]):

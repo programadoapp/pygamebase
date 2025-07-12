@@ -16,7 +16,7 @@ class Game:
         self.cena = 0
         self.blocopulador = ds.box(width=400,height=100,position_x=0,position_y=500)
         self.coleção = ds.Collection(grupo=[ds.box(width=100,height=100,position_x=400,position_y=500),self.blocopulador,ds.box(width=100,height=100,position_x=800,position_y=500),ds.box(width=300,height=100,position_x=900,position_y=500)])
-        self.pesonagen = ds.Characters(colision_color=False,width=70,padding_image=60,height=200,position_x=200,position_y=800,Collection=self.coleção,colision=True,directory="animation_spritesheets",width_image=200,height_image=200,animation_name="pesonagem")
+        self.pesonagen = ds.Characters(colision_color=False,width=70,padding_image=60,height=200,position_x=200,position_y=800,Collection=self.coleção,colision=True,directory="animation_spritesheets",width_image=200,height_image=200,animation_name="personagem")
         self.mobs = ds.Entity(colision=True,padding_image=3,directory="animation_spritesheets",name_animation="furacao",width_image=100,height_image=100,width=100,height=100,position_x=40,position_y=100,Collection=self.coleção,not_Penetrate=[self.pesonagen],colision_color=False)
         self.coleção.add_textures("textures/bloco.png")
     def test1(self):
@@ -48,7 +48,8 @@ class Game:
             if button.is_clicked(event):
                 self.cena = 0 
             self.pesonagen.button_functions_on_clicked(evento=event,strength=(20,10,10,10),potencia=(1,1,1,1),disable=ds.Desable(up=False,down=True,left=True,right=True))
-            self.pesonagen.handle_key_release(event,animation_name="pesonagem")
+            self.pesonagen.handle_key_release(event,animation_name="personagem")
+        newbutton = ds.function_lists_keyboard_press(keys=[pygame.k_a],functions_def=lambda:print("a presionada"))
         self.pesonagen.button_functions_on_press(disable=ds.Desable(True,False,False,False),potencia=[10,10,10,10],animation_right="andando",animation_left="esquerda")
         self.pesonagen.Physical(gravity=9.8,barrier=False,desable_button=True)
         self.mobs.Physical(gravity=9.8)
