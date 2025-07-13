@@ -49,8 +49,11 @@ class Game:
                 self.cena = 0 
             self.pesonagen.button_functions_on_clicked(evento=event,strength=(20,10,10,10),potencia=(1,1,1,1),disable=ds.Desable(up=False,down=True,left=True,right=True))
             self.pesonagen.handle_key_release(event,animation_name="personagem")
-        newbutton = ds.function_lists_keyboard_press(keys=[pygame.k_a],functions_def=lambda:print("a presionada"))
-        self.pesonagen.button_functions_on_press(disable=ds.Desable(True,False,False,False),potencia=[10,10,10,10],animation_right="andando",animation_left="esquerda")
+            newbutton = ds.function_lists_keyboard_press(
+                keys=[pygame.K_a],
+                functions_def=[lambda: print("a pressionada")]  
+            )
+        self.pesonagen.button_functions_on_press(disable=ds.Desable(True,False,False,False),potencia=[10,10,10,10],animation_right="andando",animation_left="esquerda",key_control=newbutton)
         self.pesonagen.Physical(gravity=9.8,barrier=False,desable_button=True)
         self.mobs.Physical(gravity=9.8)
         screen_loop.add_cena(self.screen, [text,button,self.pesonagen,self.coleção,self.mobs], ds.Colors.BRONZE)

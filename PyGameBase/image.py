@@ -78,6 +78,3 @@ class Imagemsplite:
         with open(os.path.join(self.pasta_saida, f"data.json"), "w", encoding="UTF-8") as arq:
             json.dump(dicionario,arq,indent=4)
         return self.pasta_saida
-
-decodificação = Imagemsplite("animation")
-decodificação.copilacao()
