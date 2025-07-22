@@ -1,13 +1,19 @@
 import pygame
 import os
+import PyGameBase.animationtype as animation_
+import warnings
 import json
-class Desable:
+import  threading
+import asyncio
+class Disable:
+    """Função usada para desabilitar cliques."""
     def __init__(self,up=True,down=True,left=True,right=True):
         self.UP = up
         self.DOWN = down
         self.LEFT = left
         self.RIGHT = right
 class Colors:
+    """Lista de cores."""
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
     RED = (255, 0, 0)
@@ -42,6 +48,7 @@ class Colors:
     SEASHELL = (255, 245, 238)
     GRAY = (169, 169, 169)  
 class Screen_image:
+    """Classe usada para inserir uma imagem de fundo na tela."""
     def __init__(self,image,screen):
      self.imagem = pygame.image.load(image)
      self.imagem = pygame.transform.scale(self.imagem, (screen.get_width(),screen.get_height()))
@@ -129,76 +136,17 @@ class Collection:
     def add_elements(self, screen):
         for i in self.grupo:
             i.add_elements(screen)
-class Entity:
-    def __init__(self,Collection:Collection,width,height,position_x,position_y,directory=None,colision=False,not_Penetrate=[],padding_image=None,name_animation=None,width_image=None,height_image=None,colision_color=True):
-        self.width = width
-        self.height = height
-        self.colision_color = colision_color
-        self.padding_image = padding_image
-        self.width_image = width_image
-        self.height_image = height_image
-        self.name_animation = name_animation
-        self.imagem = directory
-        if self.imagem is not None:
-            self.animation = AnimationImage()
-            self.p = self.animation.load(directory,self.name_animation,width=self.width_image,height=self.height_image)
-        self.not_penetrate = not_Penetrate
-        self.position_x = position_x
-        self.position_y = position_y
-        self.colision = colision
-        self.collection = Collection
-        self.pular = False
-    def Physical(self, gravity=0.2):
-        for j in self.not_penetrate:
-            if not j.colision and not self.colision:
-                continue
 
-            px, py, pw, ph = self.position_x, self.position_y, self.width, self.height
-            ox, oy, ow, oh = j.position_x, j.position_y, j.width, j.height
-            colidiu_y = py + ph >= oy and py < oy + oh
-            colidiu_x = px + pw > ox and px < ox + ow
-
-            if colidiu_x and colidiu_y:
-                centro_self = px + pw / 2
-                centro_j = ox + ow / 2
-
-                if centro_self < centro_j:
-                    self.position_x -= gravity
-                else:
-                    self.position_x += gravity
-
-        for i in self.collection.grupo:
-            if not i.colision:
-                continue
-            px, py, pw, ph = self.position_x, self.position_y, self.width, self.height
-            ox, oy, ow, oh = i.position_x, i.position_y, i.width, i.height
-            colidiu_y = py + ph >= oy and py < oy + oh
-            colidiu_x = px + pw > ox and px < ox + ow
-
-            if colidiu_x and colidiu_y:
-                
-                break  
-
-        else:
-            if self.pular == False:
-                self.position_y += gravity 
-
-    def add_elements(self, screen):
-        if self.colision_color == True:
-            pygame.draw.rect(
-                screen,
-                Colors.BLUE,
-                (self.position_x, self.position_y, self.width, self.height),
-                width=1
-            )
-
-        if hasattr(self, "animation") and self.animation:
-            screen.blit(self.animation.play_animation(), (self.position_x - self.padding_image, self.position_y))
 class Point_function:
     def __init__(self,radius,position_x,position_y):
         self.radius = radius
         self.position_y = position_y
         self.position_x = position_x
+        warnings.warn(
+            "(Point_function) classe em desenvolvimento! Recurso indisponível no momento, será disponibilizado em breve.  (Point_function) class under development! Feature unavailable at the moment, will be available soon.",
+            category=UserWarning,
+            stacklevel=2 
+        )
 class box:
     def __init__(self,width,height,position_x,position_y,colision=True,texture=None,colision_color=True):
         self.width = width
@@ -235,19 +183,19 @@ class box:
         if self.texture is not None:
            screen.blit(self.pygameload,(self.position_x,self.position_y))
 class AnimationImage: 
-    def __init__(self):
+    def __init__(self,speed=5):
         self.frames = []
         self.current_frame = 0
         self.frame_count = 0
         self.frame_width = 0
         self.frame_height = 0
         self.sprite_sheet = None
-        self.animation_speed = 5
+        self.animation_speed = speed
         self.counter = 0
     def stop(self):
         self.current_frame = 0
         self.counter = 0
-    def load(self, directory, name, width=None, height=None):
+    def load(self, directory, name, width=None, height=None,resize=None):
         # Carrega dados do JSON
         with open(os.path.join(directory, "data.json"), "r", encoding="utf-8") as f:
             script = json.load(f)
@@ -275,9 +223,15 @@ class AnimationImage:
             x = i * (largura_frame + espacamento)
             frame = self.sprite_sheet.subsurface((x, 0, largura_frame, altura_total))
             
-            # Redimensiona se necessário
+            # Redimensiona caso necessário
             if height is not None and width is not None:
                 frame = pygame.transform.scale(frame, (width, height))
+                if resize is not None:
+                    if callable(resize):
+                        frame = resize(frame)
+                    elif isinstance(resize, list):
+                        for transform in resize:
+                            frame = transform(frame)
             self.frames.append(frame)
 
     def play_animation(self):
@@ -296,15 +250,17 @@ class function_lists_keyboard_press:
             if pygame.key.get_pressed()[k]:
                 func()
 class function_lists_keyboard_click:
-    def __init__(self,keys_click: list, functions_def: list):
+    def __init__(self, keys_click: list, functions_def: list,typekey=pygame.KEYDOWN):
         self.keys = keys_click
         self.defs = functions_def
-    def active(self,event:pygame):
-        for k, func in zip(self.keys,self.defs):
-            if event.key == k :
-                func()
+        self.typekey = typekey
+    def active(self, event):
+        if event.type == self.typekey:
+            for k, func in zip(self.keys, self.defs):
+                if event.key == k:
+                    func()
 class Characters(AnimationImage):
-    def __init__(self,jump=True,Collection:Collection=None,width=200,height=200,position_x=0,position_y=0,colision=False,directory=None,animation_name=None,height_image=None,width_image=None,padding_image=50,colision_color=True):
+    def __init__(self,jump=True,Collection:Collection=None,width=200,height=200,position_x=0,position_y=0,colision=False,directory=None,animation_name=None,height_image=None,width_image=None,padding_image=50,colision_color=True,animation_speed=5):
         self.width = width
         self.jump = jump
         self.colision_color = colision_color
@@ -318,7 +274,7 @@ class Characters(AnimationImage):
         self.directory = directory
         self.name_animation = animation_name
         if directory is not None:
-            self.animation = AnimationImage()
+            self.animation = AnimationImage(speed=animation_speed)
             self.p = self.animation.load(directory,self.name_animation,width=self.width_image,height=self.height_image)
         self.colision = colision
         self.collection = Collection
@@ -396,14 +352,14 @@ class Characters(AnimationImage):
                 self.animation.load(self.directory,animation_name, width=self.width_image, height=self.height_image)
     def update_image(self):
         self.animation.load(self.directory, self.name_animation, width=self.width_image, height=self.height_image)
-    def button_functions_on_press(self, disable: Desable = None, potencia=[1, 1, 1, 1],animation_UP=None,animation_left=None,animation_right=None,animation_down=None,key_control:function_lists_keyboard_press=None):
+    def button_functions_on_press(self, disable: Disable = None, potencia=[1, 1, 1, 1],animation_UP=None,animation_left=None,animation_right=None,animation_down=None,key_control:function_lists_keyboard_press=None):
         teclas = pygame.key.get_pressed()
         self.pular = False
 
         if self.button_desabilide == True:
             return
         if disable is None:
-            disable = Desable(False, False, False, False)
+            disable = Disable(False, False, False, False)
         if key_control:
            key_control.active()
         if teclas[pygame.K_UP] and not disable.UP and self.button_desabilide[0] == False:
@@ -423,7 +379,7 @@ class Characters(AnimationImage):
             if animation_right is not None:
                self.animation.load(self.directory,animation_right,width=self.width_image,height=self.height_image)
             self.position_x += potencia[3]
-    def button_functions_on_clicked(self, evento, disable: Desable = None, potencia=[1, 1, 1, 1], strength=(1, 1, 10, 1),key_control:function_lists_keyboard_click=None):
+    def button_functions_on_clicked(self, evento, disable: Disable = None, potencia=[1, 1, 1, 1], strength=(1, 1, 10, 1),key_control:function_lists_keyboard_click=None):
         self.pular = False
         if disable is None:
             disable = Desable(False, False, False, False)
@@ -457,6 +413,116 @@ class Characters(AnimationImage):
                 )
         if hasattr(self, "animation") and self.animation:
            screen.blit(self.animation.play_animation(),(self.position_x-self.padding_image,self.position_y))
+class item:
+    def __init__(self,animation_image,scale=1,position_x=0,position_y=0,grupo:Collection=None):
+        self.local = False
+        self.collection = grupo
+        self.position_x = position_x
+        self.position_y = position_y
+        self.scale = scale
+        if isinstance(animation_image, str):
+           self.local = True
+           self.image = pygame.image.load(animation_image)
+           self.image = pygame.transform.scale(self.image,(40 * self.scale,40 * self.scale))
+    def drop(self):
+        for i in self.collection.grupo:
+            if not i.colision:
+                continue
+
+            px, py, pw, ph = self.position_x, self.position_y, self.scale * 40, self.scale * 40
+            ox, oy, ow, oh = i.position_x, i.position_y, i.width, i.height
+
+            colidiu_y = py + ph > oy and py < oy + oh
+            colidiu_x = px + pw > ox and px < ox + ow
+
+            if colidiu_x and colidiu_y:
+                return True
+        
+    def animation_move(self,type="on_slide",distance=200,duration=1):
+        warnings.warn(
+            "(animation_move) Função em desenvolvimento! Recurso pode não funciona no momento.\n(animation_move) Function in development! Feature may not work at the moment.",
+            category=UserWarning,
+            stacklevel=2
+        )
+        if type == "on_slide":
+            animation_.TypeA.on_slide(self, "position_y", distance,duration)
+        if type == "on_zoom":
+            animation_.TypeA.on_zoom(self, "scale",distance,duration)
+    def update(self):
+        nova_largura = int(40 * self.scale)
+        nova_altura = int(40 * self.scale)
+        self.image = pygame.transform.scale(self.image, (nova_largura, nova_altura))
+
+    def add_elements(self,screen):
+        if self.local == True:
+            screen.blit(self.image,(self.position_x,self.position_y))
+        if self.local == False:
+            screen.blit(self.image.play_animation(),(self.position_x,self.position_y))
+class Entity:
+    def __init__(self,Collection:Collection,width,height,position_x,position_y,directory=None,colision=False,not_Penetrate=[],padding_image=None,name_animation=None,width_image=None,height_image=None,colision_color=True,speed_animation=5):
+        self.width = width
+        self.height = height
+        self.colision_color = colision_color
+        self.padding_image = padding_image
+        self.width_image = width_image
+        self.height_image = height_image
+        self.name_animation = name_animation
+        self.imagem = directory
+        if self.imagem is not None:
+            self.animation = AnimationImage(speed_animation)
+            self.p = self.animation.load(directory,self.name_animation,width=self.width_image,height=self.height_image)
+        self.not_penetrate = not_Penetrate
+        self.position_x = position_x
+        self.position_y = position_y
+        self.colision = colision
+        self.collection = Collection
+        self.pular = False
+    def Physical(self, gravity=0.2):
+        for j in self.not_penetrate:
+            if not j.colision and not self.colision:
+                continue
+
+            px, py, pw, ph = self.position_x, self.position_y, self.width, self.height
+            ox, oy, ow, oh = j.position_x, j.position_y, j.width, j.height
+            colidiu_y = py + ph >= oy and py < oy + oh
+            colidiu_x = px + pw > ox and px < ox + ow
+
+            if colidiu_x and colidiu_y:
+                centro_self = px + pw / 2
+                centro_j = ox + ow / 2
+
+                if centro_self < centro_j:
+                    self.position_x -= gravity
+                else:
+                    self.position_x += gravity
+
+        for i in self.collection.grupo:
+            if not i.colision:
+                continue
+            px, py, pw, ph = self.position_x, self.position_y, self.width, self.height
+            ox, oy, ow, oh = i.position_x, i.position_y, i.width, i.height
+            colidiu_y = py + ph >= oy and py < oy + oh
+            colidiu_x = px + pw > ox and px < ox + ow
+
+            if colidiu_x and colidiu_y:
+                
+                break  
+
+        else:
+            if self.pular == False:
+                self.position_y += gravity 
+
+    def add_elements(self, screen):
+        if self.colision_color == True:
+            pygame.draw.rect(
+                screen,
+                Colors.BLUE,
+                (self.position_x, self.position_y, self.width, self.height),
+                width=1
+            )
+
+        if hasattr(self, "animation") and self.animation:
+            screen.blit(self.animation.play_animation(), (self.position_x - self.padding_image, self.position_y))
 class ButtonElement:
     def __init__(self,screen,text, position_x=0, position_y=0, width=150, height=50, 
         color=Colors.BLUE, text_color=Colors.BLACK, modelpy=None, sizepy=30, 
@@ -595,12 +661,21 @@ class Screen_loop:
     @staticmethod
     def HorizontalStack(controls, position_x=0, spacing=10):
         for i, c in enumerate(controls):
-            c.position_x = position_x + (i * spacing)
+            c.position_x = position_x + (i * spacing)  
+class BorderRadius:
+    def __init__(self, border=0):
+        self.border = border
+        self.top_left = border
+        self.top_right = border
+        self.bottom_left = border
+        self.bottom_right = border
+
 class Square:
-    def __init__(self, screen, position_x=0, position_y=0, width=200, height=100, color=Colors.BLACK, space_inside=0,responsive_magin=0.5):
+    """Cria um quadrado na tela."""
+    def __init__(self, screen, position_x=0, position_y=0, width=200,height=100,border_radius:BorderRadius=None,color=Colors.BLACK, space_inside=0,responsive_magin=0.5):
         self.space = space_inside
 
-        
+        self.border_radius_song = []
         if width == "responsive":
             width = int(screen.get_width() * responsive_magin)  
         self.width = width
@@ -619,13 +694,24 @@ class Square:
 
         self.height = height
         self.bgcolor = color
+        self.border_radius = border_radius
 
     def add_elements(self, screen):
-        pygame.draw.rect(
-            screen,
-            self.bgcolor,
-            (self.position_x, self.position_y, self.width, self.height),
-            width=self.space
-        )
-
-        
+        if self.border_radius is not None:
+            pygame.draw.rect(
+                screen,
+                self.bgcolor,
+                (self.position_x, self.position_y, self.width, self.height),
+                width=self.space,
+                border_top_left_radius=self.border_radius.top_left,
+                border_top_right_radius=self.border_radius.top_right,
+                border_bottom_left_radius=self.border_radius.bottom_left,
+                border_bottom_right_radius=self.border_radius.bottom_right,
+            )
+        else:
+            pygame.draw.rect(
+                screen,
+                self.bgcolor,
+                (self.position_x, self.position_y, self.width, self.height),
+                width=self.space
+            )
