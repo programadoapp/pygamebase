@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as arq:
 
 setup(
     name='PyGameBase',
-    version='0.1.0',
+    version='0.1.2',
     license='MIT',
     author='Thiago Silva Mendes',
     author_email='devscriptpy@gmail.com',
@@ -34,5 +34,6 @@ setup(
     'console_scripts': [
         'pygamebase = PyGameBase.cli:main',
     ],
-},
+  },
+  url="https://github.com/programadoapp/pygamebase",
 )
